@@ -90,9 +90,10 @@ class MainWindow(QMainWindow):
         headers = ["单位编码", "单位名称", "单位类别", "姓名"]
 
         userView = QTableView()
-        self.userModel = QSqlTableModel()
+        self.userModel = QSqlTableModel(userView)
         self.userModel.setTable("user")
         self.userModel.setEditStrategy(QSqlTableModel.OnManualSubmit)
+        self.userModel.setQuery(QSqlQuery("select unitsn from user"))
         self.userModel.select()
         self.userModel.setHeaderData(0, Qt.Horizontal, "单位编码")
         self.userModel.setHeaderData(1, Qt.Horizontal, "单位名称")
@@ -103,7 +104,7 @@ class MainWindow(QMainWindow):
         # self.userModel.setHorizontalHeaderLabels(headers)
         userView.setModel(self.userModel)
         # print(2)
-        combodelegate = ComboBoxDelegate(self)
+        combodelegate = ComboBoxDelegate(self, ["市残联", "金平区残联", "龙湖区残联", "濠江区残联"])
         # print(3)
         userView.setItemDelegateForColumn(2, combodelegate)
         # print(4)
