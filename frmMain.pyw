@@ -3,7 +3,7 @@
 # from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QKeySequence, QAction, QIcon, QMainWindow, QApplication, QWidget, QSizePolicy, QLabel, QFrame
 from PyQt4.QtGui import QVBoxLayout, qApp, QActionGroup, QMessageBox, QStandardItemModel, QTableView, QTableWidgetItem, QDialogButtonBox
-from PyQt4.QtGui import QPushButton, QStandardItem, QMenu, QItemDelegate, QStyleOptionComboBox, QComboBox
+from PyQt4.QtGui import QPushButton, QStandardItem, QMenu, QItemDelegate, QStyleOptionComboBox, QComboBox, QAbstractItemView
 from PyQt4.QtCore import SIGNAL, Qt, QVariant, QPyNullVariant
 from PyQt4.QtSql import QSqlDatabase, QSqlQuery, QSqlTableModel
 
@@ -114,6 +114,14 @@ class MainWindow(QMainWindow):
         combodelegate = ComboBoxDelegate(self, ["市残联", "金平区残联", "龙湖区残联", "濠江区残联"])
         # print(3)
         self.userView.setItemDelegateForColumn(3, combodelegate)
+        self.userView.setStyleSheet("QTableView::item:hover {background-color: rgba(100,200,220,100);} ")
+        # self.userView.setSelectionBehavior(QAbstractItemView.SelectItems)
+        self.userView.setSelectionMode(QAbstractItemView.SingleSelection)
+        # self.userView.horizontalHeader().setStyleSheet("color: red");
+        # self.userView.verticalHeader().hide()
+        self.userView.verticalHeader().setFixedWidth(30)
+        self.userView.verticalHeader().setStyleSheet("color: red;font-size:20px; ");
+        self.userView.setStyleSheet("font-size:14px; ");
         # print(4)
         # self.userView.show()
 
