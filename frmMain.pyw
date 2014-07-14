@@ -1,170 +1,31 @@
 #!/usr/bin/env python
 
 # from PyQt4 import QtCore, QtGui
-from PyQt4.QtGui import QKeySequence, QAction, QIcon, QMainWindow, QApplication, QWidget, QSizePolicy, QLabel, QFrame
-from PyQt4.QtGui import QVBoxLayout, qApp, QActionGroup, QMessageBox, QStandardItemModel, QTableView, QTableWidgetItem, QDialogButtonBox
-from PyQt4.QtGui import QPushButton, QStandardItem, QMenu, QItemDelegate, QStyleOptionComboBox, QComboBox, QAbstractItemView
-from PyQt4.QtCore import SIGNAL, Qt, QVariant, QPyNullVariant
-from PyQt4.QtSql import QSqlDatabase, QSqlQuery, QSqlTableModel
+from resources import *
+# from PyQt4.QtGui import QKeySequence, QAction, QIcon, QMainWindow, QApplication, QWidget, QSizePolicy, QLabel, QFrame, QTabWidget
+# from PyQt4.QtGui import QVBoxLayout, qApp, QActionGroup, QMessageBox, QStandardItemModel, QTableView, QTableWidgetItem, QDialogButtonBox
+# from PyQt4.QtGui import QPushButton, QStandardItem, QMenu, QItemDelegate, QStyleOptionComboBox, QComboBox, QAbstractItemView
+# from PyQt4.QtCore import SIGNAL, Qt, QVariant, QPyNullVariant
+# from PyQt4.QtSql import QSqlDatabase, QSqlQuery, QSqlTableModel
 
-class ComboBoxDelegate(QItemDelegate):
-    def __init__(self, parent, itemslist=["a", "b", "c"]):
-        QItemDelegate.__init__(self, parent)
-        # itemslist = ["a", "b", "c"]
-        self.itemslist = itemslist
-        self.parent = parent
-
-    # def paint(self, painter, option, index):        
-    #     # Get Item Data
-    #     value = index.data(Qt.DisplayRole).toInt()[0]
-    #     # value = self.itemslist[index.data(QtCore.Qt.DisplayRole).toInt()[0]]
-    #     # fill style options with item data
-    #     style = QApplication.style()
-    #     opt = QStyleOptionComboBox()
-    #     opt.currentText = str(self.itemslist[value])
-    #     opt.rect = option.rect
-
-
-    #     # draw item data as ComboBox
-    #     style.drawComplexControl(QStyle.CC_ComboBox, opt, painter)
-    #     self.parent.openPersistentEditor(index)
-
-    def createEditor(self, parent, option, index):
-
-        ##get the "check" value of the row
-        # for row in range(self.parent.model.rowCount(self.parent)):
-            # print row
-
-        self.editor = QComboBox(parent)
-        self.editor.addItems(self.itemslist)
-        self.editor.setCurrentIndex(0)
-        self.editor.installEventFilter(self)    
-        # self.connect(self.editor, SIGNAL("currentIndexChanged(int)"), self.editorChanged)
-
-        return self.editor
-
-    # def setEditorData(self, editor, index):
-        # value = index.data(QtCore.Qt.DisplayRole).toInt()[0]
-        # editor.setCurrentIndex(value)
-
-    def setEditorData(self, editor, index): 
-        curtxt = index.data(Qt.DisplayRole)
-        # print(type(curtxt)== QPyNullVariant )
-        if type(curtxt) == type(1):
-            curindx = int(index.data(Qt.DisplayRole))
-            curtxt = self.itemslist[curindx]
-        elif type(curtxt)== QPyNullVariant:
-            curtxt = ""
-        pos = self.editor.findText(curtxt)
-        if pos == -1:  
-            pos = 0
-        self.editor.setCurrentIndex(pos)
-
-
-    def setModelData(self,editor,model,index):
-        curindx = self.editor.currentIndex()
-        text = self.itemslist[curindx]
-        model.setData(index, text)
-
-
-    def updateEditorGeometry(self, editor, option, index):
-        self.editor.setGeometry(option.rect)
-
-    def editorChanged(self, index):
-        check = self.editor.itemText(index)
-        id_seq = self.parent.selectedIndexes[0][0]
-        update.updateCheckSeq(self.parent.db, id_seq, check)
-        
+from frmUser import UserDlg
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         # print(1)
 
-        widget = QWidget()
-        self.setCentralWidget(widget)
+        self.tabWidget=QTabWidget(self)
 
-        self.db = QSqlDatabase.addDatabase("QSQLITE")
-        self.db.setDatabaseName("caracate.db")
-        if not self.db.open():
-            QMessageBox.warning(None, "Phone Log",  "Database Error: %s" % db.lastError().text())
-            sys.exit(1)
+        widget = UserDlg()
+        widget2 = QWidget()
+        self.tabWidget.addTab(widget,"用户管理")
+        self.tabWidget.addTab(widget2,"用户管理2")
+        self.tabWidget.setTabsClosable(True)
+        self.tabWidget.tabCloseRequested.connect(self.closeMyTab)
 
-        headers = ["单位编码", "单位名称", "单位类别", "姓名"]
+        self.setCentralWidget(self.tabWidget)
 
-        self.userView = QTableView()
-        self.userModel = QSqlTableModel(self.userView)
-        self.userModel.setTable("user")
-        self.userModel.setEditStrategy(QSqlTableModel.OnManualSubmit)
-        # self.userModel.setQuery(QSqlQuery("select unitsn, unitname, unitclass, unitpp from user"))
-        self.userModel.select()
-        # self.userModel.removeColumn(2)
-        # self.userModel.removeColumn(0)
-        self.userModel.setHeaderData(1, Qt.Horizontal, "单位编码")
-        self.userModel.setHeaderData(3, Qt.Horizontal, "单位名称")
-        self.userModel.setHeaderData(4, Qt.Horizontal, "单位类别")
-        self.userModel.setHeaderData(5, Qt.Horizontal, "姓名")
-
-        # self.userModel = QStandardItemModel(0, 0, self.userView)
-        # self.userModel.setHorizontalHeaderLabels(headers)
-        self.userView.setModel(self.userModel)
-        self.userView.setColumnHidden(0, True) # hide sn
-        self.userView.setColumnHidden(2, True) # hide password
-        # print(2)
-        combodelegate = ComboBoxDelegate(self, ["市残联", "金平区残联", "龙湖区残联", "濠江区残联"])
-        # print(3)
-        self.userView.setItemDelegateForColumn(3, combodelegate)
-        self.userView.setStyleSheet("QTableView::item:hover {background-color: rgba(100,200,220,100);} ")
-        # self.userView.setSelectionBehavior(QAbstractItemView.SelectItems)
-        self.userView.setSelectionMode(QAbstractItemView.SingleSelection)
-        # self.userView.horizontalHeader().setStyleSheet("color: red");
-        # self.userView.verticalHeader().hide()
-        self.userView.verticalHeader().setFixedWidth(30)
-        self.userView.verticalHeader().setStyleSheet("color: red;font-size:20px; ");
-        self.userView.setStyleSheet("font-size:14px; ");
-        # print(4)
-        # self.userView.show()
-
-        # topFiller = QTableWidget()
-        # topFiller.clear()
-        # topFiller.setSortingEnabled(False)
-        # topFiller.setRowCount(10)
-        # topFiller.setColumnCount(len(headers))
-        # topFiller.setHorizontalHeaderLabels(headers)
-        # topFiller.setItem(1, 1, QTableWidgetItem("1"))
-        # topFiller.resizeColumnsToContents()
-
-        # topFiller = QWidget()
-        self.userView.setSizePolicy(QSizePolicy.Expanding,
-                QSizePolicy.Expanding)
-
-        btnbox = QDialogButtonBox(Qt.Horizontal)
-        newusrbtn       = QPushButton("新增")
-        modifypwdbtn    = QPushButton("修改密码")
-        savebtn         = QPushButton("保存")
-        revertbtn       = QPushButton("撤销")
-        removebtn       = QPushButton("删除")
-        btnbox.addButton(newusrbtn, QDialogButtonBox.ActionRole);
-        btnbox.addButton(modifypwdbtn, QDialogButtonBox.ActionRole);
-        btnbox.addButton(savebtn, QDialogButtonBox.ActionRole);
-        btnbox.addButton(revertbtn, QDialogButtonBox.ActionRole);
-        btnbox.addButton(removebtn, QDialogButtonBox.ActionRole);
-
-        self.infoLabel = QLabel(
-                "<i>Choose a menu option, or right-click to invoke a context menu</i>",
-                alignment=Qt.AlignCenter)
-        self.infoLabel.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-
-        # bottomFiller = QWidget()
-        # bottomFiller.setSizePolicy(QSizePolicy.Expanding,
-        #         QSizePolicy.Expanding)
-
-        vbox = QVBoxLayout()
-        vbox.setMargin(5)
-        vbox.addWidget(self.userView)
-        vbox.addWidget(btnbox)
-        vbox.addWidget(self.infoLabel)
-        widget.setLayout(vbox)
 
         self.createActions()
         self.createMenus()
@@ -172,20 +33,13 @@ class MainWindow(QMainWindow):
         message = "A context menu is available by right-clicking"
         self.statusBar().showMessage(message)
 
-        savebtn.clicked.connect(self.saveUser)
-        newusrbtn.clicked.connect(self.newUser)
-        revertbtn.clicked.connect(self.revertUser)
-        removebtn.clicked.connect(self.removeUser)
-        # self.userView.clicked.connect(self.tableClick)
-        # self.connect(savebtn, SIGNAL('clicked()'), self.saveUser)
-
-        
-        # self.createDb()
-        # self.userView.show()
-
         self.setWindowTitle("结算系统")
         self.setMinimumSize(480,320)
         self.resize(720,600)
+
+    def closeMyTab(self, tabindx):
+        self.tabWidget.removeTab (tabindx)
+        # print(tabindx)
 
     def createDb(self):
         query = QSqlQuery()
@@ -202,47 +56,6 @@ class MainWindow(QMainWindow):
             print(query.value(0), query.value(1), query.value(2))
             # starttime DATETIME NOT NULL,
         # print("createdb")
-
-    def removeUser(self):
-        index = self.userView.currentIndex()
-        row = index.row()
-        print(index.isValid(), index.row())
-        nameid = self.userModel.data(self.userModel.index(row, 0))
-        # self.userModel.setFilter("id = 10");
-        # self.userModel.select();
-        # if self.userModel.rowCount() == 1:
-        #     model.removeRows(0,1) // 如果要删除所有满足条件的记录则把1改成model.rowCount()
-        #     model.submitAll();
-
-        self.userModel.removeRows(row, 1)
-        self.userModel.submitAll()
-        self.userModel.database().commit()
-        print("nameid")
-        
-
-    def revertUser(self):
-        self.userModel.revertAll()
-        self.userModel.database().rollback()
-
-    def newUser(self):
-        row = self.userModel.rowCount()
-        self.userModel.insertRow(row)
-        self.userModel.setData(self.userModel.index(row, 2), "123456") #set default password
-
-    def saveUser(self):
-        self.userModel.database().transaction()
-        if self.userModel.submitAll():
-            self.userModel.database().commit()
-            print("save success!  ->commit")
-        else:
-            self.userModel.revertAll()
-            self.userModel.database().rollback()
-            print("save fail!  ->rollback")
-        # model->database().transaction();
-        # tmpitem = QStandardItem("张三")
-        # self.userModel.setItem(0, 0, tmpitem)
-        # print(self.userModel.database())
-        # print("saveUser")
 
     def contextMenuEvent(self, event):
         menu = QMenu(self)
